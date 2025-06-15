@@ -5,9 +5,10 @@ This project aims to create a scalable AI-powered code optimization suite that a
 ## Technologies Used:
 - **FastAPI**: Backend API for code analysis and optimization.
 - **React.js**: Interactive frontend for code input and optimization insights.
+- **Material-UI (MUI)**: React component library for a modern and responsive UI.
 - **Trae AI IDE**: For building and managing multi-agent workflows.
 - **Novita.ai**: APIs for code analysis, bug detection, and optimization suggestions.
-- **Zilliz**: Vector database for storing and retrieving optimized code snippets.
+- **Qdrant**: Vector database for storing and retrieving optimized code snippets.
 
 ## Project Structure:
 
@@ -55,8 +56,9 @@ README.md
    npm start
    ```
 
-## Features to be Implemented:
-- **Agent System Integration**: Define AI agents within Trae AI IDE for code review, security, and performance.
-- **Novita.ai Integration**: Call Novita.ai APIs for static analysis, refactoring, and security compliance.
-- **Zilliz Integration**: Embed and semantically search optimized code snippets.
-- **Performance Dashboard**: Visualize optimization results, benchmarking, and security findings in the frontend.
+## Current Features:
+- **Code Analysis & Optimization**: Utilizes Novita.ai to analyze code for optimization, explanation, potential bugs, and security vulnerabilities.
+- **Semantic Search**: Stores and retrieves optimized code snippets using Qdrant, allowing for semantic search of past optimizations.
+- **Responsive UI**: The frontend features a responsive design with beautified display boxes for analysis results, adapting to different screen sizes.
+- **Clear Error Handling**: Provides clear feedback for API errors and connection issues.
+- **Interactive Loading State**: Displays an interactive loading animation during code analysis.
