@@ -120,14 +120,31 @@ async def analyze_code(request: CodeAnalyzeRequest):
         "Content-Type": "application/json"
     }
     payload = {
-        "model": "meta-llama/llama-3.1-8b-instruct", # Using a model known to be available on Novita.ai
-        "messages": [
-            {"role": "system", "content": "You are a helpful assistant that analyzes code and provides suggestions for optimization, explanation, identifying bugs, and security vulnerabilities. Focus on common security issues like injection flaws, broken authentication, sensitive data exposure, XML External Entities (XXE), broken access control, security misconfigurations, cross-site scripting (XSS), insecure deserialization, and insufficient logging & monitoring. Additionally, analyze the code for adherence to general compliance principles such as data privacy (GDPR), security controls (SOC2), and information security management (ISO27001), looking for aspects like proper data handling, access controls, logging, and secure coding practices. Your response MUST be a JSON object with the following keys: 'analysis' (string), 'optimized_code' (string), and 'explanation' (string)."},
-            {"role": "user", "content": f"Analyze the following code for optimization, explanation, potential bugs, and security vulnerabilities:\n\n```python\n{request.code}\n```"}
-        ],
-        "max_tokens": 200,
-        "temperature": 0.2
-    }
+    "model": "meta-llama/llama-3.1-8b-instruct",  # Example: Qwen3-style model from Novita (adjust as needed)
+    "messages": [
+                    {
+                        "role": "system",
+                        "content": (
+                            "You are a helpful assistant that analyzes code and provides suggestions for optimization, explanation, "
+                            "identifying bugs, and security vulnerabilities. Focus on common security issues like injection flaws, "
+                            "broken authentication, sensitive data exposure, XML External Entities (XXE), broken access control, "
+                            "security misconfigurations, cross-site scripting (XSS), insecure deserialization, and insufficient "
+                            "logging & monitoring. Additionally, analyze the code for adherence to general compliance principles "
+                            "such as data privacy (GDPR), security controls (SOC2), and information security management (ISO27001), "
+                            "looking for aspects like proper data handling, access controls, logging, and secure coding practices. "
+                            "Your response MUST be a JSON object with the following keys: 'analysis' (string, max 50 words), 'optimized_code' (string), 'explanation' (string, max 50 words). Prioritize the full 'optimized_code' over analysis or explanation if token limits are tight."
+                          
+                        )
+                    },
+                    {
+                        "role": "user",
+                        "content": f"Analyze the following code for optimization, explanation, potential bugs, and security vulnerabilities:\n\n```python\n{request.code}\n```"
+                    }
+                ],
+                "max_tokens": 200,
+                "temperature": 0.2
+            }
+
 
     async with httpx.AsyncClient() as client:
         try:
@@ -147,6 +164,7 @@ async def analyze_code(request: CodeAnalyzeRequest):
             # Adjust this based on the actual structure of Novita.ai's chat completion response
             if analysis_result and analysis_result.get("choices"):
                 message_content = analysis_result["choices"][0]["message"]["content"]
+                print(f"Message Content before JSON parse: {message_content}")
                 try:
                     # Attempt to parse the message_content as JSON
                     parsed_content = json.loads(message_content)
@@ -162,7 +180,8 @@ async def analyze_code(request: CodeAnalyzeRequest):
                         }
                     else:
                         raise HTTPException(status_code=500, detail="API response JSON is missing required keys.")
-                except json.JSONDecodeError:
+                except json.JSONDecodeError as e:
+                    print(f"JSON Decode Error: {e}")
                     # If message_content is not valid JSON, return it as plain analysis
                     end_time = time.time()
                     execution_time = end_time - start_time

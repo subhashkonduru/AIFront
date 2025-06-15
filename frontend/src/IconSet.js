@@ -17,6 +17,7 @@ const IconSet = ({ onFinish }) => {
   const [checked, setChecked] = useState(new Array(icons.length).fill(false));
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     let current = 0;
     const interval = setInterval(() => {
       // Safely capture current index
@@ -35,7 +36,7 @@ const IconSet = ({ onFinish }) => {
     }, 600);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [icons.length, onFinish]);
 
   return (
     <Box display="flex" justifyContent="space-around" alignItems="center" mt={2}>
