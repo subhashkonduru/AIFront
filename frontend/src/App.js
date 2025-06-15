@@ -1,43 +1,28 @@
 import React, { useState } from 'react';
 import {
-  Container,
-  AppBar,
-  Toolbar,
-  Typography,
-  Button,
-  TextField,
-  Paper,
-
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  Alert
+  Container, AppBar, Toolbar, Typography, Button, TextField,
+  Paper, Box, List, ListItem, ListItemIcon, ListItemText,
+  CircularProgress, Alert
 } from '@mui/material';
-
 import CodeIcon from '@mui/icons-material/Code';
 import SecurityIcon from '@mui/icons-material/Security';
 import GavelIcon from '@mui/icons-material/Gavel';
 import BugReportIcon from '@mui/icons-material/BugReport';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-
 import IconSet from './IconSet';
-import AnalysisDisplay from './AnalysisDisplay';
 
 function App() {
   const [code, setCode] = useState('');
   const [analysisResult, setAnalysisResult] = useState('');
   const [optimizedCode, setOptimizedCode] = useState('');
   const [explanation, setExplanation] = useState('');
-  const [executionTime, setExecutionTime] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const handleAnalyzeCode = async () => {
+const handleAnalyzeCode = async () => {
     setAnalysisResult('');
     setOptimizedCode('');
     setExplanation('');
-    setExecutionTime(0);
     setLoading(true);
     setError(null);
 
@@ -51,40 +36,41 @@ function App() {
       const data = await response.json();
 
       if (response.ok) {
+        let analysisText = data.analysis || '';
+
+        // Step 1: Remove markdown-style backticks if present
+        const cleanedText = analysisText.replace(/^```json\s*|\s*```$/g, '');
+
+        // Step 2: Try to parse it
         try {
-          let analysisContent = data.analysis;
+          const parsed = JSON.parse(cleanedText);
+          console.log("✅ Parsed analysis JSON:", parsed);
 
-          // Check if the analysis content is a markdown code block and extract the JSON
-          const jsonBlockRegex = /```json\n([\s\S]*?)\n```/;
-          const match = analysisContent.match(jsonBlockRegex);
+          // Step 3: Set state if values are present
+          setAnalysisResult(parsed.analysis || '');
+          setOptimizedCode(parsed.optimized_code || '');
+          setExplanation(parsed.explanation || '');
+        } catch (err) {
+          console.error("❌ Failed to parse analysis as JSON:", err);
+          console.log("Raw analysis text:", analysisText);
 
-          if (match && match[1]) {
-            analysisContent = match[1];
-          }
-
-          const parsedAnalysis = JSON.parse(analysisContent);
-          setAnalysisResult(parsedAnalysis.analysis || '');
-          setOptimizedCode(parsedAnalysis.optimized_code || '');
-          setExplanation(parsedAnalysis.explanation || '');
-          setExecutionTime(data.execution_time || 0);
-        } catch (parseError) {
-          console.error('🔥 Error parsing analysis JSON:', parseError);
-          // Fallback to display raw analysis content if parsing fails
+          // Fallback to original fields (if parsing fails)
           setAnalysisResult(data.analysis || '');
-          setOptimizedCode('');
-          setExplanation('');
-          setExecutionTime(0);
+          setOptimizedCode(data.optimized_code || '');
+          setExplanation(data.explanation || '');
         }
       } else {
         setError(data.detail || 'Unknown error from backend');
         setLoading(false);
       }
-    } catch (err) {
-      console.error('🔥 Error analyzing code:', err);
+    } catch (error) {
+      console.error('🔥 Error analyzing code:', error);
       setError('Failed to connect to backend');
       setLoading(false);
     }
   };
+
+
 
   return (
     <Container maxWidth="lg">
@@ -96,6 +82,7 @@ function App() {
         </Toolbar>
       </AppBar>
 
+      {/* Top Feature Description */}
       <Paper elevation={3} sx={{ p: 3, mb: 4, bgcolor: '#e3f2fd' }}>
         <Typography variant="h5" color="primary" gutterBottom>
           Enhanced Capabilities:
@@ -106,19 +93,19 @@ function App() {
         <List dense>
           <ListItem>
             <ListItemIcon><CodeIcon color="primary" /></ListItemIcon>
-            <ListItemText primary="Deep Code Optimization" />
+            <ListItemText primary="Deep Code Optimization: Suggestions for more efficient and readable code." />
           </ListItem>
           <ListItem>
             <ListItemIcon><SecurityIcon color="primary" /></ListItemIcon>
-            <ListItemText primary="AI-Powered Security Auditing" />
+            <ListItemText primary="AI-Powered Security Auditing: Detection of high-risk vulnerabilities." />
           </ListItem>
           <ListItem>
             <ListItemIcon><GavelIcon color="primary" /></ListItemIcon>
-            <ListItemText primary="Compliance Enforcement" />
+            <ListItemText primary="Compliance Enforcement: Checks for GDPR, SOC2, ISO27001." />
           </ListItem>
           <ListItem>
             <ListItemIcon><BugReportIcon color="primary" /></ListItemIcon>
-            <ListItemText primary="Bug Identification" />
+            <ListItemText primary="Bug Identification: Finds potential runtime errors." />
           </ListItem>
         </List>
         <Typography>
@@ -126,6 +113,7 @@ function App() {
         </Typography>
       </Paper>
 
+      {/* Input and Button */}
       <Paper elevation={3} sx={{ p: 3, mb: 4 }}>
         <Typography variant="h5" gutterBottom>
           Code Analysis & Optimization
@@ -160,27 +148,56 @@ function App() {
 
         {error && (
           <Alert severity="error" sx={{ mt: 2 }}>
-            {typeof error === 'object' && error !== null
-              ? (error.msg || JSON.stringify(error, null, 2))
-              : error}
+            {typeof error === 'object' && error !== null ? (error.msg || JSON.stringify(error, null, 2)) : error}
           </Alert>
         )}
       </Paper>
 
-      {!loading && (analysisResult || optimizedCode || explanation || executionTime) && (
+      {/* Output Section */}
+      {!loading && (analysisResult || optimizedCode || explanation) && (
         <Paper elevation={3} sx={{ p: 3, mb: 4 }}>
           <Typography variant="h5" gutterBottom color="primary">
             Analysis Results
           </Typography>
 
-          <AnalysisDisplay
-            analysis={analysisResult}
-            optimizedCode={optimizedCode}
-            explanation={explanation}
-            executionTime={executionTime}
-          />
+          <Box my={2}>
+            <Typography variant="subtitle1" fontWeight="bold">🔍 Analysis</Typography>
+            <TextField
+              multiline
+              fullWidth
+              value={analysisResult}
+              InputProps={{ readOnly: true }}
+              variant="outlined"
+              sx={{ mt: 1 }}
+            />
+          </Box>
+
+          <Box my={2}>
+            <Typography variant="subtitle1" fontWeight="bold">🧠 Optimized Code</Typography>
+            <TextField
+              multiline
+              fullWidth
+              value={optimizedCode}
+              InputProps={{ readOnly: true }}
+              variant="outlined"
+              sx={{ mt: 1 }}
+            />
+          </Box>
+
+          <Box my={2}>
+            <Typography variant="subtitle1" fontWeight="bold">📘 Explanation</Typography>
+            <TextField
+              multiline
+              fullWidth
+              value={explanation}
+              InputProps={{ readOnly: true }}
+              variant="outlined"
+              sx={{ mt: 1 }}
+            />
+          </Box>
         </Paper>
       )}
+
     </Container>
   );
 }
