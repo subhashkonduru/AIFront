@@ -7,6 +7,7 @@ import {
   Button,
   TextField,
   Paper,
+
   List,
   ListItem,
   ListItemIcon,
@@ -32,8 +33,6 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || '/api';
-
   const handleAnalyzeCode = async () => {
     setAnalysisResult('');
     setOptimizedCode('');
@@ -43,7 +42,7 @@ function App() {
     setError(null);
 
     try {
-      const response = await fetch(`${BACKEND_URL}/analyze-code`, {
+      const response = await fetch('https://ai-backend-a0agdpdtfafhfcay.canadacentral-01.azurewebsites.net/analyze-code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code }),
@@ -55,8 +54,10 @@ function App() {
         try {
           let analysisContent = data.analysis;
 
-          const jsonBlockRegex = /```json\\n([\\s\\S]*?)\\n```/;
+          // Check if the analysis content is a markdown code block and extract the JSON
+          const jsonBlockRegex = /```json\n([\s\S]*?)\n```/;
           const match = analysisContent.match(jsonBlockRegex);
+
           if (match && match[1]) {
             analysisContent = match[1];
           }
@@ -68,6 +69,7 @@ function App() {
           setExecutionTime(data.execution_time || 0);
         } catch (parseError) {
           console.error('🔥 Error parsing analysis JSON:', parseError);
+          // Fallback to display raw analysis content if parsing fails
           setAnalysisResult(data.analysis || '');
           setOptimizedCode('');
           setExplanation('');
@@ -75,11 +77,11 @@ function App() {
         }
       } else {
         setError(data.detail || 'Unknown error from backend');
+        setLoading(false);
       }
     } catch (err) {
       console.error('🔥 Error analyzing code:', err);
       setError('Failed to connect to backend');
-    } finally {
       setLoading(false);
     }
   };
@@ -148,7 +150,13 @@ function App() {
           Analyze Code
         </Button>
 
-        {loading && <IconSet onFinish={() => setLoading(false)} />}
+        {loading && (
+          <IconSet
+            onFinish={() => {
+              setLoading(false);
+            }}
+          />
+        )}
 
         {error && (
           <Alert severity="error" sx={{ mt: 2 }}>
