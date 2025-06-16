@@ -42,7 +42,7 @@ function App() {
     setError(null);
 
     try {
-      const response = await fetch('https://ai-backend-a0agdpdtfafhfcay.canadacentral-01.azurewebsites.net/analyze-code', {
+    const response = await fetch(`${process.env.REACT_APP_API_URL}/analyze-code`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code }),
